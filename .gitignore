@@ -9,3 +9,6 @@ __pycache__/
 *.pyc
 .DS_Store
 Thumbs.db
+
+# 本地 AI 工作目录，不属于参赛项目
+.workbuddy/
