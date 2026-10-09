@@ -1,10 +1,68 @@
 # 真实 MCP 联调验收
 
-**执行时间**：2026-10-09 14:09—14:20（北京时间）
+## 当前版本：《麦麦补给局》本地端到端验证（2026-10-09 16:00）
+
+**验证环境**：Node.js 24.21.0 / Next.js 16.4.0 / 生产构建产物，本机 `next start`
+**验证范围**：构建、测试、运行时接口、会话安全、约束求解器。**不包含真实交易**。
+
+### 构建与测试
+
+| 检查 | 命令 | 结果 |
+| --- | --- | --- |
+| 自动化测试 | `npm test` | **35 / 35 通过**，耗时 7.5s |
+| 类型检查 | `tsc --noEmit` | 通过，0 错误 |
+| 生产构建 | `next build` | 通过（Turbopack），5 条路由：`/`、`/_not-found` 静态，`/api/game/[...action]`、`/api/mcp/[...action]`、`/challenge/[code]` 动态 |
+| 运行时启动 | `next start` | 首页 HTTP 200，标题「麦麦补给局 · 每一餐，都能出发」 |
+
+### 运行时接口
+
+| 接口 | 结果 | 观测内容 |
+| --- | --- | --- |
+| `GET /` | 200 | 返回完整页面 |
+| `GET /api/game/bootstrap`（无 Cookie） | 200 | 下发 `mc_user` 签名Cookie（`HttpOnly; SameSite=Strict; Path=/; Max-Age=31536000`），返回随机身份与三餐任务 |
+| `GET /api/game/state`（无 Cookie） | 401 | `请先打开任务大厅` —— 未授权访问被拒 |
+| `POST /api/game/persona`（无 Cookie） | 400 | 与会话要求一致，未建立档案即拒绝 |
+| `GET /api/mcp/status`（带 Cookie） | 200 | `{"mode":"demo","label":"DEMO · 虚拟积分与订单","toolCount":35}` |
+
+会话安全实测：无 Cookie 的 `/api/game/state` 返回 401；跨档案调用 `/api/game/solve` 返回 400「任务不属于当前个人档案」；`POST` 均先经 `assertSameOrigin`。签名实现为 `HMAC-SHA256` + `timingSafeEqual` 定时安全比较（`lib/user.ts`）。
+
+### 约束求解器
+
+`GET /api/game/bootstrap` → 取午餐任务（`城市中场休息`，预算 3300 分，必需品类 `main` + `drink`）→ `GET /api/game/stores?beType=1` 取门店（成都磨子桥餐厅 `3450082`，567m）→ `POST /api/game/solve`：
+
+**搜索空间 80 种组合，返回 3 条路线。**
+
+| 路线 | 组合 | 价格 | 热量 | 蛋白 | 评分 |
+| --- | --- | --- | --- | --- | --- |
+| 省钱路线 | 麦香鸡 + 牛奶 | ¥17.50 | 520 kcal | 22 g | 781 |
+| 蛋白优先 | 双层吉士汉堡 + 牛奶 + 麦乐鸡（4块） | ¥30.00 | 765 kcal | 44 g | 764 |
+| 丰富搭配 | 麦香鸡 + 牛奶 + 圆筒冰淇淋 | ¥22.50 | 660 kcal | 25 g | 778 |
+
+三条路线均满足预算与必需品类约束（`coverage: 1`）。结果中 `officialVerified: false`，正确标注为演示模式未经验价，未冒充官方核价结果。
+
+### 本次未验证
+
+- 真实 MCP 写入操作：下单、取消、积分兑换、抽奖、领券、活动预约、真实算价。
+- 外送与得来速分支（`beType=2` / `5`，需地址或车道编码）。
+- 多实例部署与并发（当前为单 Node 进程 + 本地 SQLite）。
+
+### 环境备注（不影响仓库）
+
+本机验证过程中遇到两个沙箱限制，均与项目代码无关：
+
+- `next build` 清理 `.next/trace-build` 时触发文件删除保护，需 `CODEBUDDY_SAFE_DELETE_ENABLED=0`。
+- `node_modules` 由 Linux 环境打包，缺少 `@esbuild/win32-x64` 二进制导致测试无法启动；补齐平台包后 35 项测试全部通过。
+
+CI（`.github/workflows/ci.yml`）在干净环境运行，不存在上述问题。
+
+---
+
+## 历史：原版 Skill 工具级联调（2026-10-09 14:09—14:20）
+
 **执行环境**：MCP 客户端 / 宿主智能体，会话握手 HTTP 200，`tools/call` 均返回 `isError: false`
 **凭证**：个人 MCP Token，仅存放于客户端本地配置，未写入本仓库
 
-## 工具级验证
+### 工具级验证
 
 | 工具 | 参数 | 结果 | 观测到的行为 |
 | --- | --- | --- | --- |
