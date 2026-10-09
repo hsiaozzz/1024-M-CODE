@@ -1,5 +1,7 @@
 # 报名 Issue 草稿（尚未提交）
 
+> **原版历史存档。** 以下正文与检查项针对 2026-10-09 的「麦麦规划助手」Skill，不是新版《麦麦补给局》的报名材料或最新验收结论。新版网页、三餐任务和确认网关由 Codex 实现，参见 [README](../README.md) 与 [新版 MCP 联调范围](../MCP_INTEGRATION.md)。正式提交前须更新项目名称、介绍及验证范围并重新核对；本文件未触发任何报名操作。
+
 提交前：完成真实 MCP 联调、检查公开文件不含凭证，并由参赛者确认官方参赛声明与规则。
 
 官方入口：https://github.com/M-China/mcd-developer-innovation-challenge/issues

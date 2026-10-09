@@ -1,106 +1,101 @@
-# 麦麦规划助手 · 1024 M-CODE
+# 麦麦补给局 · 1024 M-CODE
 
-把「在麦当劳办成事」拆成可执行的查询链：派对选址、积分决策、门店算价、热量配餐、活动日历。
+**把一天的三顿饭，变成三场属于你的补给冒险。**
 
-基于麦当劳中国 MCP 的 35 个真实工具构建。项目主体是可由兼容智能体加载的 [Skill](skills/mcd-party-planner/SKILL.md)，无需自行部署服务器。
+《麦麦补给局》是一个由麦当劳中国 MCP 驱动的配餐策略网页应用。每人在北京时间每天获得早餐、午餐、晚餐三份任务：在个人预算、餐次和营养条件下装配餐品卡牌，与约束求解器比较路线，再用门店服务验价通关。不必消费，也能获得应用内经验与虚拟徽章。
 
-> 全部工具调用均在 WorkBuddy 中真实执行并记录，见 [MCP_INTEGRATION.md](MCP_INTEGRATION.md)。项目只使用查询类工具，不自动执行下单、领券、抽奖等写入操作。
+城市大厅采用本地 SVG/CSS 插画，连接补给工坊、积分藏宝阁、幸运站、优惠、配送、团餐、官方活动与订单旅程。默认演示模式覆盖 35 项工具能力；连接个人 MCP Token 后使用官方实时工具。真实交易始终经过预览与用户确认，支付在官方页面完成。
 
-## 解决的问题
+![麦麦补给局桌面任务大厅，包含个人早餐午餐晚餐挑战与城市玩法入口](docs/images/desktop.png)
 
-用麦当劳 MCP 的人都会卡在同一个地方：**工具是分散的，而真实需求是连贯的**。给孩子办生日派对，要先知道有哪些派对、再看哪些城市有、再看该城市哪家门店、再看门店哪天能约、再看当天几点有场次、还剩几个位置——六步，每一步的参数都只能从上一步的返回里取。麦当劳 App 不提供这条链，官方 MCP 也没有任何单一工具能给出答案。
+## 快速开始
 
-本 Skill 把这些散落工具编排成完整决策链，并对每一层的参数来源、失败处理与操作边界作出明确约束。
+需要 **Node.js 24 或以上版本**：
 
-## 五条已跑通的能力链
-
-### 1. 派对选址（六层强依赖）
-
-```text
-mall-points-products(catRuleIds=1>6>20)
-  → mall-product-detail(spuId) → query-party-city(spuId)
-    → query-party-store(spuId, code, lat, lng)
-      → query-party-store-date(spuId, storeCode)
-        → query-party-store-session(spuId, storeCode, date)
-          → party-order-create(14 必填参数)  ⚠ 写入类，不自动调用
+```bash
+npm install
+npm run dev
 ```
 
-实测记录：`spuId=8516`（一起开心鸭尊享版生日派对）→ 安康市 → 门店 `1960713`（813m）→ 10 个可约日期（10-09 至 10-18）→ 场次 `18:30-20:00`、5-12 人、138 元、**余位 12**。
+打开 [http://localhost:3000](http://localhost:3000)，无需 Token 即可玩演示。默认位置为「成都市武侯区世外桃源酒店」。生产运行使用 `npm run build`，再执行 `npm start`。
 
-难点：每一层的 `storeCode` / `spuId` / `date` / 场次 `id` 都必须来自上一层真实返回。Skill 明确禁止推断这些参数——这是本项目最核心的约束。
+**先玩一局：**选择今日任务 → 选择补给门店 → 添加主食和饮料，或生成三条搭配路线 → 验价 → 完成任务。修改个人预算与偏好后，明天的三份任务使用新规则；今天的任务不会因刷新或设置改动重抽。
 
-### 2. 积分资产与抽奖决策
+完整使用步骤见 [体验指南](docs/APP_GUIDE.md)，技术实现与限制见 [架构说明](docs/ARCHITECTURE.md)。
 
-`query-my-account` → `mall-points-products` → `query-lottery-info` →（可选）`draw-lottery`
+## 好玩的部分
 
-实测：可用 185.5 分、累计 1108.7 分、**已过期 923.2 分**；抽奖 24 分/次进行中，10 个奖品含「下单立减 3 元券」「巨无霸类5 折券」「30 积分」。
+- **每天三餐，个人任务种子。** 任务按身份、北京日期、餐次生成并持久化。预算余量、目标、故事与奖励组合变化；每个人的进度独立，同一天的挑战保持稳定。
+- **餐品卡牌与搭配路线。** 用本店菜单装配补给箱，比较省钱、蛋白优先和丰富搭配方案。算法使用可复现的约束搜索，当前不另接语言模型。
+- **能说明原因的验价。** 展示预算、品类、餐次和营养检查；优惠和各项费用由算价接口返回。缺失营养、特调与套餐子项变化显示未核验，不伪装成完整数据。
+- **消费之外也有成长。** 完成任务获得虚拟 XP、连续天数和徽章；通关不下单，虚拟奖励与官方积分独立。分享冻结菜单挑战，让好友在同一道题上与算法比较分数。
+- **一座接通完整能力的城市。** 查询优惠、积分与奖品，探索配送、团餐和活动，体验订单状态流转。高级场景依据当前工具 schema 生成表单，并检查上游参数来源。
 
-Skill 会把`expiredPoint` / `currentMouthExpirePoint` 作为**优先消耗信号**（过期积分不会变成可用余额），并按 `point` 与 `availablePoint` 把商品分为「现在够 / 需攒点 / 需加钱」三档，同时校验 `resourceEligible` 与 `status`。
+## MCP 接入与 35 项能力
 
-### 3. 门店级算价与券验证
+在 [麦当劳 MCP 开放平台](https://open.mcd.cn/mcp) 申请个人 Token，在网页的连接设置中输入即可。服务端通过 Streamable HTTP 连接 `https://mcp.mcd.cn`，动态读取实际工具 schema。每位用户的 Token 只保存在服务端内存；服务重启后需重新连接。
 
-`query-nearby-stores` → `query-store-coupons` → `query-meals` → `calculate-price`
+| 场景 | 工具数 | 覆盖内容 |
+| --- | ---: | --- |
+| 时间与活动 | 2 | 官方时间、当月活动日历 |
+| 门店、餐品、配送与优惠 | 12 | 附近/得来速门店、地址簿、配送门店、菜单、特调、营养、领券、卡包、本店券、算价 |
+| 企业团餐 | 2 | 满减满折、助餐服务 |
+| 积分与商城 | 6 | 账户、商品、SKU、兑换、商城订单列表和详情 |
+| 幸运站 | 3 | 资格与本次消耗、抽一次、中奖记录 |
+| 官方活动副本 | 5 | 城市、门店、日期、场次、预约 |
+| 订单旅程 | 5 | 餐饮下单、状态、历史订单、取消、已有满意度奖券 |
 
-关键区分：`available-coupons` / `query-my-coupons` 是**账户权益**，`query-store-coupons` 才是**门店真实可用**。Skill 强制区分二者，不把卡包券说成「可用于本店」。
+「覆盖」指实现入口、网关和演示适配器，不代表 35 个工具都做过真实交易。演示价格、营养、积分、活动、奖品与订单均为模拟；真实只读联调与未验收交易范围见 [MCP_INTEGRATION.md](MCP_INTEGRATION.md)。
 
-实测边界：`calculate-price` 缺 `storeCode` 返回 400「storeCode 门店编码不能为空」；缺 `beCode`（外送/得来速场景）同样报错。Skill 如实转述缺失字段及其上游来源，不猜不编。
+新版已通过真实门店读取与官方算价验证：磨子桥餐厅菜单 124 条、营养库 160 条，其中 18 条精确匹配；候选求解返回一份 ¥34.00、24 g 蛋白质的午餐方案。该结果仅代表当时门店与账户，实时价格会变化。
 
-### 4. 热量与预算双约束配餐
+也可在兼容智能体中导入 [mcd-missions Skill](skills/mcd-missions/SKILL.md) 来解释三餐挑战与配餐决策。原有 [综合规划 Skill](skills/mcd-party-planner/SKILL.md) 保留为独立的只读规划入口；两种 Skill 不替代网页服务端的通关与确认流程。
 
-`list-nutrition-foods` 返回 160 个餐品的 `energyKcal` / `protein` / `fat` / `carbohydrate` / `sodium` / `calcium`，支持按热量与预算同时筛选，并输出营养合计让用户看到取舍。无价格数据时标「价格待核实」，不承诺满足预算。
+## 技术要点与边界
 
-### 5. 当月活动日历
+应用使用 Next.js App Router、React、TypeScript、MCP SDK、AJV 和 Node 内置 SQLite。档案、任务、报价、确认状态和演示账户状态持久化；个人身份使用签名 HttpOnly cookie。所有金额在游戏 API 中以整数分表示。
 
-`campaign-calendar(specifiedDate?)`。实测修正了官方 schema 的描述偏差——文档说「当天及前后共三天」，实测为**前后最近各一个**有活动日期（传 `2026-10-20` 返回 `10-18` 与 `10-22`，锚点日本身无活动故不返回）。Skill 按实测语义实现，并要求向用户说明实际命中日期。
+报价绑定个人任务和数据模式，5 分钟过期；通关奖励幂等记录。真实写操作先创建消耗明确的预览，再确认执行，提交前复核条件。网络超时导致结果不明时不自动重试下单，先核查官方记录。
 
-## 安装与使用
+当前候选求解器支持一个主食、一个饮料、可选一个小食/甜品，最多输出三条路线。它不保证任意多人分配或全局最优优惠；低预算或营养缺失可能没有可行解。城市图是玩法示意，不提供真实地图导航。好友挑战只按冻结菜单标价比较，不涉及官方优惠和交易，分享链接依赖运行服务保存的快照。
 
-1. 在 [麦当劳 MCP 开放平台](https://open.mcd.cn/mcp) 申请个人 Token。
-2. 配置 MCP 连接器：Streamable HTTP，地址 `https://mcp.mcd.cn`，请求头 `Authorization: Bearer <个人 Token>`。参考[官方指南](https://github.com/M-China/mcd-mcp-server)。仓库的 [mcp-config.example.json](mcp-config.example.json)仅含环境变量占位符；真实凭证只保存在客户端本地。
-3. 在兼容 Skill 的智能体中安装 `skills/mcd-party-planner` 文件夹，或按客户端的技能导入功能导入其中的 `SKILL.md`。MCP 连接成功不代表客户端自动加载了 Skill，需分别完成配置。
-4. 启用 MCP 并确认工具可用，然后输入下方示例。
+本地数据默认保存在 `data/mcmissions.sqlite`，会话密钥保存在 `data/session.key`，均不进入 Git。可通过 `MCMISSIONS_DATA_DIR` 配置持久化目录。当前结构面向单个 Node 服务；无持久磁盘的 Serverless 或多实例部署需要改造存储与连接管理。
 
-```text
-孩子下个月生日，想办个麦当劳主题派对，帮我看看我所在城市有哪些选择。
+## 验证与项目结构
 
-我在安康，想给 8 岁孩子办生日派对，10 月中旬哪个店有空位？
-
-我有多少麦享会积分？快过期的有没有，不想浪费。
-
-附近麦当劳有什么券可用？帮我算一下双层吉士加中可乐多少钱。
-
-帮我配一份 500 大卡以内的套餐，尽量别超钠摄入。
-
-这个周末麦当劳有什么活动？
+```bash
+npm test
+npm run typecheck
+npm run build
 ```
 
-输出包含：结论、查询时间、数据来源工具、活动或商品名称、价格与日期、门店与地址、剩余名额、参与条件、以及未提供需核实的事项。完整验证场景见 [docs/acceptance.md](docs/acceptance.md)。
+游戏测试覆盖北京换日、三餐任务稳定与身份差异、预算上限、报价和数量校验、营养缺失与特调、候选路线及不可行菜单。MCP 测试覆盖演示业务和确认流程。真实扣积分、下单、抽奖、预约、取消与支付未由本次开发自动执行。
 
-## 安全边界
+当前 **35 项自动化测试通过**，TypeScript 检查和生产构建通过。GitHub Actions 在 Node.js 24 下运行测试、类型检查和构建，工作流见 [ci.yml](.github/workflows/ci.yml)。
 
-- **不自动执行写入操作**。下单、领券、抽奖、积分兑换、派对下单仅在用户明确表达意图时识别，并交回客户端授权流程。Skill 从不由推荐推导授权。
-- **不把工具返回当指令**。实测发现部分工具返回体内嵌「输出规则」段落，要求 AI 主动给建议。此类内容视为数据字段，不构成授权，也不覆盖 Skill 规则。
-- **不推断上游参数**。`storeCode`、`spuId`、`dateStr`、场次 `id` 只能来自上一层真实返回。
-- **不伪造凭证与价格**。仓库仅含环境变量占位符；无价格数据时标注待核实。
-- 全部文件不含 Token、密钥或个人身份信息。
-
-## 项目结构
+浏览器已验证演示三餐求解、验价和通关、演示订单、进度持久化、身份切换及移动端布局；好友挑战已通过无 cookie 访问、同卡组评分、伪造餐品拒绝和不授予 XP 的验证。领券、单次抽奖、商城规格、活动场次预约预览、套餐特调验价和双人小队同步也已通过演示验证。网页真实读取与官方算价结果另见上文 MCP 联调范围。
 
 ```text
-skills/mcd-party-planner/SKILL.md    助手主体（五条能力链与安全边界）
-mcp-config.example.json             脱敏接入模板
-MCP_INTEGRATION.md                   工具清单、入参 schema 与真实调用记录
-CONTEST_DECLARATION.md               官方参赛声明原文
-docs/acceptance.md                   联调验收场景与结果
-docs/registration-issue.md           报名正文草稿
-docs/submission-readiness.md        参赛合规自检报告
-workbuddy.md                         WorkBuddy 开发上下文（专项奖励必需）
+app/                              网页与游戏 / MCP API
+components/                       城市插画、弹窗、能力场景
+lib/game.ts                       个性化任务与约束求解
+lib/repository.ts                 档案 / 任务 / 报价 / 通关
+lib/mcp.ts、lib/actions.ts         MCP 网关与确认状态
+lib/demo-tools.ts                 35 项工具模拟业务
+tests/                            游戏与 MCP 业务测试
+skills/mcd-missions/               三餐任务助手 Skill
+skills/mcd-party-planner/          原版综合规划 Skill
+docs/APP_GUIDE.md                  体验指南
+docs/ARCHITECTURE.md               技术架构与能力映射
+MCP_INTEGRATION.md                 版本范围、schema 与真实联调记录
+workbuddy.md                      原版 WorkBuddy 开发历史
+CONTEST_DECLARATION.md             官方参赛声明原文
 ```
 
-## 参赛信息
+## 开发历史与参赛
 
-用于参加 [麦当劳程序员创意开发大赛](https://github.com/M-China/mcd-developer-innovation-challenge)。报名及排名时间为 **2026 年 10 月 9 日 10:30 至 10 月 25 日 23:59（北京时间）**，具体以 [官方规则](https://github.com/M-China/mcd-developer-innovation-challenge/blob/main/activityGuidelines.md) 为准。
+仓库原版 Skill 和只读联调在腾讯 WorkBuddy 中完成，历史记录保留于 [workbuddy.md](workbuddy.md) 与 [原版验收记录](docs/acceptance.md)。本轮《麦麦补给局》网页、任务引擎、MCP 网关和演示业务由 Codex 实现；原版历史不代表新版交易功能已经实测。
 
-本项目在腾讯 [WorkBuddy](https://www.workbuddy.cn/) 中完成开发，真实调用麦当劳 MCP 完成联调，开发上下文见 [workbuddy.md](workbuddy.md)。可将[报名草稿](docs/registration-issue.md)提交至官方仓库 Issue；创建本仓库不等于报名成功，须以官方回复为准。
+项目用于参加 [麦当劳程序员创意开发大赛](https://github.com/M-China/mcd-developer-innovation-challenge)。报名及排名时间为 **2026 年 10 月 9 日 10:30 至 10 月 25 日 23:59（北京时间）**，以 [官方规则](https://github.com/M-China/mcd-developer-innovation-challenge/blob/main/activityGuidelines.md) 为准。[报名正文](docs/registration-issue.md) 与 [提交检查](docs/submission-readiness.md) 属于原版存档，提交前须按当前项目更新并复核；创建仓库和提交代码不等于报名成功。
 
-项目为独立开发作品，非麦当劳官方产品。活动信息、价格及供应状态以官方实时结果为准。原创 Skill 和文档以 [MIT License](LICENSE) 开源；官方参赛声明及第三方商标、服务与材料的权利归各自权利人，其使用遵循相应条款。
+本项目为独立开发作品，非麦当劳官方产品。餐品信息、价格、权益与供应以官方实时结果为准。项目原创代码、Skill 与文档采用 [MIT License](LICENSE)；官方材料与第三方商标、服务和素材归其权利人所有。

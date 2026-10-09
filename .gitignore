@@ -9,6 +9,13 @@ __pycache__/
 *.pyc
 .DS_Store
 Thumbs.db
+node_modules/
+.next/
+data/
+*.tsbuildinfo
+playwright-report/
+test-results/
+.local/
 
 # 本地 AI 工作目录，不属于参赛项目
 .workbuddy/
