@@ -1,7 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import { userId, sessionCookie, assertSameOrigin } from '@/lib/user';
 import { db } from '@/lib/db';
-import { chinaDate, cartTotals, evaluate, solveCandidates, hash } from '@/lib/game';
+import {
+  chinaDate,
+  cartTotals,
+  evaluate,
+  solveCandidates,
+  hash,
+  normalizeMissionTitle,
+} from '@/lib/game';
 import {
   getProfile,
   saveProfile,
@@ -282,7 +289,9 @@ export async function GET(request: Request, context: Context) {
       const row = db().prepare('SELECT payload FROM challenges WHERE code=?').get(code) as
         { payload: string } | undefined;
       if (!row) return json({ error: '挑战卡不存在，请让朋友重新分享' }, 404);
-      return json(JSON.parse(row.payload));
+      const snapshot = JSON.parse(row.payload);
+      snapshot.mission = normalizeMissionTitle(snapshot.mission);
+      return json(snapshot);
     }
     if (action === 'rooms') {
       const roomId = new URL(request.url).searchParams.get('id') || '';

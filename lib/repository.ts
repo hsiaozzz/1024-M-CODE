@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { db } from './db';
-import { chinaDate, defaultProfile, generateMission, SLOTS } from './game';
+import { chinaDate, defaultProfile, generateMission, normalizeMissionTitle, SLOTS } from './game';
 import type { Profile, Mission, Bootstrap, Quote, Mode, MenuProduct, Store } from './types';
 
 export function getProfile(id: string): Profile {
@@ -48,6 +48,9 @@ export function saveProfile(id: string, input: Record<string, unknown>) {
   db().prepare('UPDATE profiles SET payload=? WHERE id=?').run(JSON.stringify(profile), id);
   return profile;
 }
+function readMission(payload: string): Mission {
+  return normalizeMissionTitle(JSON.parse(payload) as Mission);
+}
 export function dailyMissions(id: string, date = chinaDate()): Mission[] {
   const profile = getProfile(id);
   for (const slot of SLOTS) {
@@ -63,7 +66,7 @@ export function dailyMissions(id: string, date = chinaDate()): Mission[] {
     .all(id, date) as { payload: string; done: string | null }[];
   return rows
     .map(
-      (r) => ({ ...JSON.parse(r.payload), status: r.done ? 'complete' : 'available' }) as Mission,
+      (r) => ({ ...readMission(r.payload), status: r.done ? 'complete' : 'available' }) as Mission,
     )
     .sort((a, b) => SLOTS.indexOf(a.slot) - SLOTS.indexOf(b.slot));
 }
@@ -72,7 +75,7 @@ export function getMission(id: string, missionId: string): Mission {
     .prepare('SELECT payload FROM missions WHERE user_id=? AND id=?')
     .get(id, missionId) as { payload: string } | undefined;
   if (!row) throw new Error('任务不属于当前个人档案');
-  return JSON.parse(row.payload);
+  return readMission(row.payload);
 }
 export function stats(id: string): Bootstrap['stats'] {
   const rows = db()

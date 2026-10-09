@@ -78,8 +78,12 @@ export function CityIllustration() {
           </text>
           <g transform="translate(100 -81)">
             <path d="M-30 17v-58" stroke="#535941" strokeWidth="5" />
-            <path d="m-30-41 38-22v-30l-38 22Z" fill="#ffbc53" />
-            <path d="m-23-69 5-3v-11l5-3v11l5-3v-11l5-3v21l-20 12Z" fill="#33372f" />
+            <image
+              href="/mcdonalds.svg"
+              width="40"
+              height="40"
+              transform="matrix(1 -.578 0 1 -31 -79)"
+            />
           </g>
         </g>
         <g fill="#778f65">

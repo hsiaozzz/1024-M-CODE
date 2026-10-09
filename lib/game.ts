@@ -11,6 +11,11 @@ import type {
 
 export const SLOTS: MealSlot[] = ['breakfast', 'lunch', 'dinner'];
 export const SLOT_LABELS = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐' };
+export function normalizeMissionTitle(mission: Mission): Mission {
+  return mission.slot === 'lunch' && mission.title === '午后能量补满'
+    ? { ...mission, title: '正午能量补满' }
+    : mission;
+}
 export function chinaDate(now = new Date()): string {
   return new Intl.DateTimeFormat('sv-SE', {
     timeZone: 'Asia/Shanghai',
@@ -57,7 +62,7 @@ export function generateMission(profile: Profile, date: string, slot: MealSlot):
       ['午间灵感补给', '代码写到一半，午餐信号响了。寻找预算与口味之间的好解法。'],
       ['城市中场休息', '暂停忙碌，在主食与饮料之外寻找自己的午间搭配。'],
       ['正午省钱行动', '破解预算限制，用巧妙的组合给午后留下更多余量。'],
-      ['午后能量补满', '距离今天的终点还有一半。用一份满意的午餐为自己续航。'],
+      ['正午能量补满', '距离今天的终点还有一半。用一份满意的午餐为自己续航。'],
     ],
     dinner: [
       ['夜航补给行动', '城市灯光正在亮起。准备晚餐，为今天的旅程写一个满意的结尾。'],

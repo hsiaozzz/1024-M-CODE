@@ -14,6 +14,7 @@ import {
   CircleHelp,
   Compass,
   Copy,
+  ExternalLink,
   Flame,
   Gift,
   Globe2,
@@ -48,6 +49,7 @@ import type {
   Store,
 } from '@/lib/types';
 import { CityIllustration } from '@/components/CityIllustration';
+import { McDonaldsIcon } from '@/components/McDonaldsIcon';
 import { Modal } from '@/components/Modal';
 import { ScenePanel, scenes, type SceneId } from '@/components/ScenePanel';
 
@@ -402,9 +404,7 @@ export default function Home() {
   if (!data)
     return (
       <main className="loading-screen">
-        <div className="brand-mark">
-          m<span>↗</span>
-        </div>
+        <McDonaldsIcon />
         <h1>麦麦补给局</h1>
         {initialError ? (
           <>
@@ -445,9 +445,7 @@ export default function Home() {
     <div className="app-shell">
       <aside className="sidebar">
         <a href="#today" className="brand" aria-label="麦麦补给局首页">
-          <div className="brand-mark">
-            m<span>↗</span>
-          </div>
+          <McDonaldsIcon />
           <div>
             <strong>麦麦补给局</strong>
             <small>MAKE EVERY MEAL A QUEST.</small>
@@ -812,7 +810,7 @@ export default function Home() {
           </section>
           <footer className="dashboard-footer">
             <div className="footer-brand">
-              m<span>↗</span> MAKE EVERY MEAL A QUEST.
+              <McDonaldsIcon className="footer-logo" /> MAKE EVERY MEAL A QUEST.
             </div>
             <p>
               虚拟经验与徽章不等同于麦当劳官方积分。
@@ -1454,6 +1452,12 @@ export default function Home() {
                   placeholder="输入你的个人访问 Token"
                 />
               </label>
+              <p className="token-portal-link">
+                还没有 Token？
+                <a href="https://open.mcd.cn/mcp" target="_blank" rel="noopener noreferrer">
+                  前往麦当劳官方平台创建 Token <ExternalLink size={14} />
+                </a>
+              </p>
               <p className="connection-security">
                 <ShieldCheck size={17} />
                 Token 由服务端保管，不会写进前端存储或显示在页面上。

@@ -30,6 +30,7 @@ import type {
   Solution,
 } from '@/lib/types';
 import { CityIllustration } from '@/components/CityIllustration';
+import { McDonaldsIcon } from '@/components/McDonaldsIcon';
 
 type SharedChallenge = {
   code: string;
@@ -129,9 +130,7 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
   if (!challenge)
     return (
       <main className="loading-screen">
-        <div className="brand-mark">
-          m<span>↗</span>
-        </div>
+        <McDonaldsIcon />
         <h1>好友补给挑战</h1>
         {error ? (
           <>
@@ -166,9 +165,7 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
     <div className="challenge-shell">
       <header className="challenge-topbar">
         <a href="/" className="brand">
-          <div className="brand-mark">
-            m<span>↗</span>
-          </div>
+          <McDonaldsIcon />
           <div>
             <strong>麦麦补给局</strong>
             <small>MAKE EVERY MEAL A QUEST.</small>
@@ -501,7 +498,7 @@ export default function ChallengePage({ params }: { params: Promise<{ code: stri
         </section>
         <footer className="challenge-footer">
           <div className="footer-brand">
-            m<span>↗</span> MAKE EVERY MEAL A QUEST.
+            <McDonaldsIcon className="footer-logo" /> MAKE EVERY MEAL A QUEST.
           </div>
           <a href="/" className="button button-charcoal">
             我也想要专属三餐任务 <ArrowRight size={16} />
