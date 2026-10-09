@@ -2,14 +2,31 @@
 
 体检时间：2026-10-09 14:00（北京时间）
 复检时间：2026-10-09 14:15（北京时间，真实 MCP 联调完成后）
+升级时间：2026-10-09 14:20（北京时间，项目重构为综合规划助手）
 体检对象：`E:/code/1024-M-CODE` → `https://github.com/hsiaozzz/1024-M-CODE`
 依据：[activityGuidelines.md](https://github.com/M-China/mcd-developer-innovation-challenge/blob/main/activityGuidelines.md)、[官方 README](https://github.com/M-China/mcd-developer-innovation-challenge)
 
 ---
 
+## 最新结论（14:20，项目升级后）
+
+项目已从「活动推荐助手」重构为「麦麦规划助手」，覆盖五条已实测贯通的能力链，工具使用从 4 个只读扩展到 18 个查询类工具。
+
+| 项目 | 初检（14:00） | 现在（14:20） |
+| --- | --- | --- |
+| 真实使用 MCP | 🔴 未联调，自证未接| ✅ 六层派对链 + 四条其他链全部实测贯通 |
+| 技术深度 | 🔴 4 个只读工具，本质是排序 | ✅ 18 个工具，含七层强依赖链与写入前校验 |
+| Star 数 | 🔴 0 | ⏳ **仍为 0，唯一剩余阻断项** |
+| workbuddy.md | 🟡 缺失 | ✅ 已补齐，含完整脱敏开发时间线 |
+| 报名 Issue | ⏳ 未提交 | ⏳ 待提交（截止 10-25 23:59） |
+
+**材料层面已无阻碍。剩余唯一短板是 Star 数。**
+
+---
+
 ## 复检结论（14:15）
 
-初检的两个🔴 阻断项已解除，一个🟡 已补齐。
+初检的两个 🔴 阻断项已解除，一个🟡 已补齐。
 
 | 初检阻断项 | 复检状态 | 处理结果 |
 | --- | --- | --- |
@@ -19,8 +36,6 @@
 | 🟡 未提交报名 Issue | ⏳ 待办 | 需在 10-25 23:59 前发 Issue，正文草稿在 `docs/registration-issue.md` |
 
 同时完成的加固：`CONTEST_DECLARATION.md` 保持与官方逐字一致；真实 Token 仅存于本地 MCP 配置，仓库与远端双重扫描零泄露；`.workbuddy/` 已排除出仓库。
-
-**当前状态：材料齐备，可提交报名。唯一短板是 Star 数。**
 
 ---
 
@@ -50,7 +65,7 @@
 | 3 | `README.md`（项目介绍/安装方法/使用示例/目标用户） | ✅ | 四要素齐全，示例对话 3 条 |
 | 4 | `CONTEST_DECLARATION.md` 文件名+ 内容不可改动 | ✅ | 与官方 `diff -u` **逐字一致，零差异** |
 | 5 | `MCP_INTEGRATION.md`（Server/Tool/调用流程/业务价值） | ⚠️ 形式齐、实质空 | 有表格和流程图，但"联调状态"写明未联调 |
-| 6 | 源代码 / 可运行内容 | ✅ | `skills/mcd-campaign-assistant/SKILL.md`（规则允许"形式不限"） |
+| 6 | 源代码 / 可运行内容 | ✅ | `skills/mcd-party-planner/SKILL.md`（规则允许"形式不限"） |
 | 7 | `mcp-config.example.json` 脱敏、仅环境变量占位符 | ✅ | `"Bearer ${MCD_MCP_TOKEN}"`，无真实凭证 |
 | 8 | 不含 Token/密钥/个人隐私 | ✅ | 全仓正则扫描 0 命中；`.gitignore` 已排除 `.env`、`mcp-config.json` |
 | 9 | 无违规内容/外链 | ✅ | 外链仅官方 github/open.mcd.cn/cdn.mcd.cn |
