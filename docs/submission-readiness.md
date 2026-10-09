@@ -28,8 +28,8 @@
 | CI 配置 | ✅ | `.github/workflows/ci.yml`，Node.js 24 跑三项检查 |
 | 项目结构 | ✅ | 单一主体 `skills/mcd-missions`，旧 `mcd-party-planner` 已删除（历史在 git 可追溯） |
 | 写入类工具安全 | ✅ | preview → confirmationId → execute 三段式；SHA-256 指纹去重、账户级排他锁、`BEGIN IMMEDIATE` 事务、状态机、5 分钟过期、超时标记 `uncertain` 且不自动重试 |
-| Star 数 | 🔴 **0** | 规则明确 0 Star 不进排行榜 → **唯一剩余阻断项** |
-| 报名 Issue | ⏳ | 未提交，草稿已就绪（截止 10-25 23:59） |
+| Star 数 | 🔴 **0** | 规则明确 0 Star 不进排行榜 → **唯一剩余阻断项，需推广** |
+| 报名 Issue | ✅ | 已于 2026-10-09 16:20 提交，Issue #30，等待官方审核回复 |
 
 ### 本轮修复记录
 
@@ -62,7 +62,7 @@ CI 在干净环境运行，无此问题。
 | 🔴 未真实使用麦当劳 MCP | ✅ 已解除 | 握手 HTTP 200，`tools/list` 35 个工具，调用全部 `isError: false` |
 | 🔴 Star = 0 | ⏳ 仍待解决 | 需推广才能进排行榜，至今未变 |
 | 🟡 缺 workbuddy.md | ✅ 已补齐 | 后续随项目重构同步更新 |
-| 🟡 未提交报名 Issue | ⏳ 待办 | 草稿已就绪，待定稿后提交 |
+| 🟡 未提交报名 Issue | ✅ 已完成 | 已提交 Issue #30，见 [报名记录](registration-issue.md) |
 
 同时完成的加固：`CONTEST_DECLARATION.md` 保持与官方逐字一致；真实 Token 仅存于本地 MCP 配置，仓库与远端双重扫描零泄露；`.workbuddy/` 已排除出仓库。
 
