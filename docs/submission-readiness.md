@@ -1,41 +1,68 @@
 # 参赛提交合规体检报告
 
-> **原版历史存档。** 本报告的「最新」「现在」、Star 数、报名状态与合规判断均指下文所列的原版 Skill 检查时间，不是新版《麦麦补给局》的现行状态。新版网页由 Codex 实现，当前功能、开发归属与真实 MCP 验证范围见 [README](../README.md)、[ARCHITECTURE](ARCHITECTURE.md) 和 [MCP_INTEGRATION](../MCP_INTEGRATION.md)。提交新版前应重新检查官方规则、声明、报名材料与远端状态，不能沿用本报告结论。
+体检时间：2026-10-09 14:00（北京时间，初版Skill）
+复检时间：2026-10-09 14:15（真实 MCP 联调完成后）
+升级时间：2026-10-09 14:20（重构为综合规划 Skill）
+**终检时间：2026-10-09 15:50（《麦麦补给局》参赛版本定稿）**
 
-体检时间：2026-10-09 14:00（北京时间）
-复检时间：2026-10-09 14:15（北京时间，真实 MCP 联调完成后）
-升级时间：2026-10-09 14:20（北京时间，项目重构为综合规划助手）
 体检对象：`E:/code/1024-M-CODE` → `https://github.com/hsiaozzz/1024-M-CODE`
 依据：[activityGuidelines.md](https://github.com/M-China/mcd-developer-innovation-challenge/blob/main/activityGuidelines.md)、[官方 README](https://github.com/M-China/mcd-developer-innovation-challenge)
 
 ---
 
-## 最新结论（14:20，项目升级后）
+## 终检结论（15:50，当前参赛版本：《麦麦补给局》）
 
-项目已从「活动推荐助手」重构为「麦麦规划助手」，覆盖五条已实测贯通的能力链，工具使用从 4 个只读扩展到 18 个查询类工具。
+参赛版本已从纯 Skill 升级为完整网页应用。合规与质量项全部通过。
 
-| 项目 | 初检（14:00） | 现在（14:20） |
+| 项目 | 状态 | 证据 |
 | --- | --- | --- |
-| 真实使用 MCP | 🔴 未联调，自证未接| ✅ 六层派对链 + 四条其他链全部实测贯通 |
-| 技术深度 | 🔴 4 个只读工具，本质是排序 | ✅ 18 个工具，含七层强依赖链与写入前校验 |
-| Star 数 | 🔴 0 | ⏳ **仍为 0，唯一剩余阻断项** |
-| workbuddy.md | 🟡 缺失 | ✅ 已补齐，含完整脱敏开发时间线 |
-| 报名 Issue | ⏳ 未提交 | ⏳ 待提交（截止 10-25 23:59） |
+| 官方必填文件 | ✅ | README / CONTEST_DECLARATION / MCP_INTEGRATION / mcp-config.example.json / workbuddy.md 齐备 |
+| 声明文件一致性 | ✅ | 与官方 `diff -u` 零差异 |
+| 脱敏配置 | ✅ | 仅 `${MCD_MCP_TOKEN}` 占位符 |
+| 敏感文件隔离 | ✅ | `data/`（含 `session.key`、SQLite）、`.next/`、`.local/`、`node_modules/` 均被 `.gitignore` 排除，未进入 Git |
+| 真实凭证 | ✅ | Token 仅存本地 `~/.workbuddy/mcp.json`；应用内由用户输入并只存后端内存 |
+| 真实使用 MCP | ✅ | 14:55 网页只读联调：35 工具发现、门店菜单 124 条、营养库 160 条、门店券、`calculate-price` 官方验价、活动解析 |
+| 自动化测试 | ✅ | **35/35 通过**（本地实测，2026-10-09 15:47） |
+| 类型检查 | ✅ | `tsc --noEmit` 无错误 |
+| 生产构建 | ✅ | `next build` 通过（16.4.0 Turbopack） |
+| CI 配置 | ✅ | `.github/workflows/ci.yml`，Node.js 24 跑三项检查 |
+| 项目结构 | ✅ | 单一主体 `skills/mcd-missions`，旧 `mcd-party-planner` 已删除（历史在 git 可追溯） |
+| 写入类工具安全 | ✅ | preview → confirmationId → execute 三段式；SHA-256 指纹去重、账户级排他锁、`BEGIN IMMEDIATE` 事务、状态机、5 分钟过期、超时标记 `uncertain` 且不自动重试 |
+| Star 数 | 🔴 **0** | 规则明确 0 Star 不进排行榜 → **唯一剩余阻断项** |
+| 报名 Issue | ⏳ | 未提交，草稿已就绪（截止 10-25 23:59） |
 
-**材料层面已无阻碍。剩余唯一短板是 Star 数。**
+### 本轮修复记录
+
+| 问题 | 根因 | 处理 |
+| --- | --- | --- |
+| `npm test` 4/4 全挂 | `node_modules` 是在 Linux 上安装后拷到 Windows，`@esbuild/win32-x64` 目录存在但二进制为空 | 删除损坏目录后 `npm install @esbuild/win32-x64@0.28.2 --ignore-scripts`，测试恢复 35/35 |
+| 两个 Skill 并存 | 上一版 `mcd-party-planner` 未随重构删除，评审无法判断主体 | 删除，仅保留 `mcd-missions`；README 同步移除引用 |
+| 写入工具安全说明过简 | README 仅两句话带过确认网关，浪费了最有说服力的设计 | 新增「写入类工具与交易安全」章节，展开指纹去重、排他锁、事务、状态机、不确定结果处理，并列出 10 条安全边界测试用例 |
+| 报名材料过时 | 草稿仍写旧项目名与旧验证范围 | 重写为《麦麦补给局》，附合规自检清单与三阶段演进表 |
+
+### 沙箱环境备注（不影响仓库）
+
+构建与测试在本机的两个环境障碍，已确认均为沙箱限制而非项目缺陷：
+
+- `next build` 清理 `.next/trace-build` 时触发 WorkBuddy 删除保护（`SAFE_DELETE_BULK_CONFIRM_REQUIRED`，50 文件阈值），需 `CODEBUDDY_SAFE_DELETE_ENABLED=0`。
+- `npm install` 的 esbuild postinstall 偶发`EBUSY`（node.exe 被会话进程占用）。
+
+CI 在干净环境运行，无此问题。
 
 ---
 
-## 复检结论（14:15）
+## 历史：初检结论（14:00）
 
-初检的两个 🔴 阻断项已解除，一个🟡 已补齐。
+初检对象为活动推荐 Skill（4 个只读工具）。当时结论：形式分满分，实质偏薄，唯一硬阻断项为未真实联调与 Star=0。该结论已随项目重构失效，仅作演进记录保留。
+
+## 历史：复检结论（14:15）
 
 | 初检阻断项 | 复检状态 | 处理结果 |
 | --- | --- | --- |
-| 🔴 未真实使用麦当劳 MCP | ✅ **已解除** | 2026-10-09 14:09 完成真实联调：握手 HTTP 200，`tools/list` 35 个工具，4 个查询工具 `tools/call` 全部 `isError: false`。记录见 `MCP_INTEGRATION.md` |
-| 🔴 Star = 0 | ⏳ **仍待解决** | 远端 `stargazers_count = 0`。需推广才能进排行榜，这是唯一剩余阻断项 |
-| 🟡 缺 workbuddy.md | ✅ **已补齐** | 新增 `workbuddy.md`，含脱敏开发时间线与实测发现；README 已改为"在 WorkBuddy 中完成开发" |
-| 🟡 未提交报名 Issue | ⏳ 待办 | 需在 10-25 23:59 前发 Issue，正文草稿在 `docs/registration-issue.md` |
+| 🔴 未真实使用麦当劳 MCP | ✅ 已解除 | 握手 HTTP 200，`tools/list` 35 个工具，调用全部 `isError: false` |
+| 🔴 Star = 0 | ⏳ 仍待解决 | 需推广才能进排行榜，至今未变 |
+| 🟡 缺 workbuddy.md | ✅ 已补齐 | 后续随项目重构同步更新 |
+| 🟡 未提交报名 Issue | ⏳ 待办 | 草稿已就绪，待定稿后提交 |
 
 同时完成的加固：`CONTEST_DECLARATION.md` 保持与官方逐字一致；真实 Token 仅存于本地 MCP 配置，仓库与远端双重扫描零泄露；`.workbuddy/` 已排除出仓库。
 

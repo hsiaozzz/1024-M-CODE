@@ -49,13 +49,58 @@ npm run dev
 
 新版已通过真实门店读取与官方算价验证：磨子桥餐厅菜单 124 条、营养库 160 条，其中 18 条精确匹配；候选求解返回一份 ¥34.00、24 g 蛋白质的午餐方案。该结果仅代表当时门店与账户，实时价格会变化。
 
-也可在兼容智能体中导入 [mcd-missions Skill](skills/mcd-missions/SKILL.md) 来解释三餐挑战与配餐决策。原有 [综合规划 Skill](skills/mcd-party-planner/SKILL.md) 保留为独立的只读规划入口；两种 Skill 不替代网页服务端的通关与确认流程。
+也可在兼容智能体中导入 [mcd-missions Skill](skills/mcd-missions/SKILL.md) 来解释三餐挑战与配餐决策。Skill 只解释玩法与决策逻辑，不替代网页服务端的通关与确认流程。
+
+## 写入类工具与交易安全
+
+应用实现了 7 个写入类工具：`create-order`、`cancel-order`、`mall-create-order`、`draw-lottery`、`auto-bind-coupons`、`party-order-create`、`delivery-create-address`。它们**不会因为浏览或推荐而被触发**，全部经过同一道确认网关。
+
+### 确认网关
+
+写入操作必须走完两步，中间不存在「一步直接扣款」的路径：
+
+```text
+preview(name, args)  →  返回 confirmationId + 消耗摘要 + 5 分钟过期时间
+                          ↓  用户在界面上看到确切金额与消耗
+execute(confirmationId)  →  复核条件后才调用官方工具
+```
+
+`previewAction` 在返回确认前先做四件事：校验参数（`validateAction`）、确认账户连接未在预览期间被替换、对「会话 + 工具名 + 参数 + 消耗」做 SHA-256 指纹、查近期是否已有同指纹操作。
+
+### 防重复与并发
+
+| 机制 | 实现 |
+| --- | --- |
+| 确认归属 | `executeAction` 校验 `confirmationId` 的 `user_id`，他人确认无法执行 |
+| 会话绑定 | 预览时的 `session_id` 与执行时不一致则拒绝，避免换账户后执行旧预览 |
+| 状态机 | `pending → executing → succeeded / uncertain`，非 `pending` 拒绝再次执行 |
+| 账户级排他锁 | `mcp_action_locks` 表，同一账户同时只允许一笔操作处于执行或待核实状态 |
+| 事务保护 | `BEGIN IMMEDIATE` + 条件更新 `WHERE state='pending'`，并发下只有一方能成功 |
+| 幂等 | `succeeded` 再次调用直接返回原结果，不重复提交 |
+| 重复购物车 | 5 分钟内相同 `create-order` 指纹直接复用既有确认，避免连点 |
+| 过期 | 确认 5 分钟失效，过期后必须重新预览以获取当前价格与消耗 |
+
+### 不确定结果处理
+
+网络超时或超时不等于失败。超时的操作被标记为 `uncertain` 而**不自动重试下单**——因为重复提交可能造成重复扣款。用户必须先通过官方渠道核实真实结果，系统才允许继续。这条规则同样由`mcp_action_locks` 强制：处于 `uncertain` 状态时，账户被锁定，无法再发起任何操作。
+
+### 演示模式下的模拟
+
+未连接 MCP Token 时，所有工具走 `lib/demo-tools.ts` 的模拟实现。演示模式下的下单、扣积分、抽奖和兑换**不产生任何真实交易**，但同样走完整的预览 → 确认流程，以便验证交互与状态机。真实交易始终在官方页面完成支付。
+
+### 已验证与未验证
+
+- **已验证（演示模式）**：35 项工具完整旅程、领券、单次抽奖、商城规格、活动场次预约预览、套餐特调验价、双人小队同步、确认流程的状态机与幂等性，由自动化测试与浏览器验证覆盖。
+- **已验证（真实只读）**：35 工具发现、门店菜单读取、营养匹配、门店券、餐品详情、`calculate-price` 官方验价、活动解析。
+- **未验证（真实写入）**：真实扣积分、真实下单、真实抽奖、真实预约、真实领券、真实支付。这些需要写入个人账户并可能产生扣款，开发过程中未自动执行，行为以官方接口实际返回为准。
+
+如需验证写入路径，请在官方测试条件下自行操作并核对官方记录；应用不会替你承担重复提交的后果。
 
 ## 技术要点与边界
 
 应用使用 Next.js App Router、React、TypeScript、MCP SDK、AJV 和 Node 内置 SQLite。档案、任务、报价、确认状态和演示账户状态持久化；个人身份使用签名 HttpOnly cookie。所有金额在游戏 API 中以整数分表示。
 
-报价绑定个人任务和数据模式，5 分钟过期；通关奖励幂等记录。真实写操作先创建消耗明确的预览，再确认执行，提交前复核条件。网络超时导致结果不明时不自动重试下单，先核查官方记录。
+报价绑定个人任务和数据模式，5 分钟过期；通关奖励幂等记录。网络超时导致结果不明时不自动重试下单，先核查官方记录。
 
 当前候选求解器支持一个主食、一个饮料、可选一个小食/甜品，最多输出三条路线。它不保证任意多人分配或全局最优优惠；低预算或营养缺失可能没有可行解。城市图是玩法示意，不提供真实地图导航。好友挑战只按冻结菜单标价比较，不涉及官方优惠和交易，分享链接依赖运行服务保存的快照。
 
@@ -73,6 +118,21 @@ npm run build
 
 当前 **35 项自动化测试通过**，TypeScript 检查和生产构建通过。GitHub Actions 在 Node.js 24 下运行测试、类型检查和构建，工作流见 [ci.yml](.github/workflows/ci.yml)。
 
+其中若干用例直接针对安全边界，可作为设计验证的参考：
+
+| 用例 | 验证的约束 |
+| --- | --- |
+| a live write timeout is never retried and keeps a persistent uncertainty lock | 真实写操作超时后不重试，且持续持有不确定锁 |
+| a live quote cannot survive reconnection to another token even if the mode stays live | 换Token 后旧报价立即失效，即使模式标记未变 |
+| an in-flight old-account read cannot populate the new-account observations | 旧账户的在途读取不会污染新账户数据 |
+| server quotes and missions belong to a single profile | 报价与任务绑定同一份档案 |
+| failed nutrition checks, expired quotations and previous-day missions cannot earn a reward | 营养不达标、报价过期、跨日任务均不给奖励 |
+| signed profile cookies round-trip and cannot be reassigned or forged | 签名 Cookie 防重放与伪造 |
+| foreign origins, different ports and explicit cross-site requests are rejected | 跨站请求被拒 |
+| profile updates cannot reroll persisted daily missions | 改档案不会重掷已持久化的当日任务 |
+| each meal earns its server reward exactly once | 每餐奖励幂等 |
+| all 35 demo scenes form valid account, delivery, mall and party journeys | 35 个工具的演示旅程全部成环 |
+
 浏览器已验证演示三餐求解、验价和通关、演示订单、进度持久化、身份切换及移动端布局；好友挑战已通过无 cookie 访问、同卡组评分、伪造餐品拒绝和不授予 XP 的验证。领券、单次抽奖、商城规格、活动场次预约预览、套餐特调验价和双人小队同步也已通过演示验证。网页真实读取与官方算价结果另见上文 MCP 联调范围。
 
 ```text
@@ -84,7 +144,6 @@ lib/mcp.ts、lib/actions.ts         MCP 网关与确认状态
 lib/demo-tools.ts                 35 项工具模拟业务
 tests/                            游戏与 MCP 业务测试
 skills/mcd-missions/               三餐任务助手 Skill
-skills/mcd-party-planner/          原版综合规划 Skill
 docs/APP_GUIDE.md                  体验指南
 docs/ARCHITECTURE.md               技术架构与能力映射
 MCP_INTEGRATION.md                 版本范围、schema 与真实联调记录
