@@ -1,18 +1,36 @@
 # 参赛提交合规体检报告
 
 体检时间：2026-10-09 14:00（北京时间）
+复检时间：2026-10-09 14:15（北京时间，真实 MCP 联调完成后）
 体检对象：`E:/code/1024-M-CODE` → `https://github.com/hsiaozzz/1024-M-CODE`
 依据：[activityGuidelines.md](https://github.com/M-China/mcd-developer-innovation-challenge/blob/main/activityGuidelines.md)、[官方 README](https://github.com/M-China/mcd-developer-innovation-challenge)
 
 ---
 
-## 一、结论先行
+## 复检结论（14:15）
 
-**当前状态：可以报名，但不建议现在就报。**
+初检的两个🔴 阻断项已解除，一个🟡 已补齐。
+
+| 初检阻断项 | 复检状态 | 处理结果 |
+| --- | --- | --- |
+| 🔴 未真实使用麦当劳 MCP | ✅ **已解除** | 2026-10-09 14:09 完成真实联调：握手 HTTP 200，`tools/list` 35 个工具，4 个查询工具 `tools/call` 全部 `isError: false`。记录见 `MCP_INTEGRATION.md` |
+| 🔴 Star = 0 | ⏳ **仍待解决** | 远端 `stargazers_count = 0`。需推广才能进排行榜，这是唯一剩余阻断项 |
+| 🟡 缺 workbuddy.md | ✅ **已补齐** | 新增 `workbuddy.md`，含脱敏开发时间线与实测发现；README 已改为"在 WorkBuddy 中完成开发" |
+| 🟡 未提交报名 Issue | ⏳ 待办 | 需在 10-25 23:59 前发 Issue，正文草稿在 `docs/registration-issue.md` |
+
+同时完成的加固：`CONTEST_DECLARATION.md` 保持与官方逐字一致；真实 Token 仅存于本地 MCP 配置，仓库与远端双重扫描零泄露；`.workbuddy/` 已排除出仓库。
+
+**当前状态：材料齐备，可提交报名。唯一短板是 Star 数。**
+
+---
+
+## 一、初检结论（14:00 存档）
+
+**初检状态：可以报名，但不建议现在就报。**
 
 报名条件里的「形式审查」几乎全部通过，但**两条实质门槛没达标**：
 
-| 阻断项 | 官方要求 | 现状 | 严重度 |
+| 阻断项 | 官方要求 | 初检现状 | 严重度 |
 | --- | --- | --- | --- |
 | 未真实使用麦当劳 MCP | "参赛项目须真实使用麦当劳 MCP 能力" | README / MCP_INTEGRATION.md 自述"尚未配置个人 Token，也未执行真实 MCP 调用" | 🔴 致命 |
 | Star = 0 | "Star 数为 0 的项目不进入排行榜" | 远端 `stargazers_count = 0` | 🔴 致命（等于零奖） |
@@ -36,7 +54,7 @@
 | 7 | `mcp-config.example.json` 脱敏、仅环境变量占位符 | ✅ | `"Bearer ${MCD_MCP_TOKEN}"`，无真实凭证 |
 | 8 | 不含 Token/密钥/个人隐私 | ✅ | 全仓正则扫描 0 命中；`.gitignore` 已排除 `.env`、`mcp-config.json` |
 | 9 | 无违规内容/外链 | ✅ | 外链仅官方 github/open.mcd.cn/cdn.mcd.cn |
-| 10 | `workbuddy.md` | ❌ 缺失 | 非报名必需，但专项奖必需 |
+| 10 | `workbuddy.md` | ✅ | 已补齐，含脱敏开发上下文（2026-10-09 复检） |
 
 ---
 
