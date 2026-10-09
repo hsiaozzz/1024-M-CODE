@@ -116,7 +116,7 @@ npm run build
 
 游戏测试覆盖北京换日、三餐任务稳定与身份差异、预算上限、报价和数量校验、营养缺失与特调、候选路线及不可行菜单。MCP 测试覆盖演示业务和确认流程。真实扣积分、下单、抽奖、预约、取消与支付未由本次开发自动执行。
 
-当前 **35 项自动化测试通过**，TypeScript 检查和生产构建通过。GitHub Actions 在 Node.js 24 下运行测试、类型检查和构建，工作流见 [ci.yml](.github/workflows/ci.yml)。
+当前 **35 项自动化测试通过**，TypeScript 检查和生产构建通过。GitHub Actions 在 Node.js 24 下运行测试、类型检查和构建，工作流见 [ci.yml](.github/workflows/ci.yml)。本地端到端验证记录（运行时接口、会话安全、约束求解三条路线）见 [docs/acceptance.md](docs/acceptance.md)。
 
 其中若干用例直接针对安全边界，可作为设计验证的参考：
 
